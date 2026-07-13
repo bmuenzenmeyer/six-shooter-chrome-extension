@@ -1,4 +1,8 @@
-# Six Shooter
+<p align="center">
+  <img src="icons/icon128.png" width="96" height="96" alt="Six Shooter icon — a revolver cylinder">
+</p>
+
+<h1 align="center">Six Shooter</h1>
 
 A Chrome extension that holds you to six open tabs. Open a seventh and one of the other six —
 picked at random — takes a bullet.
@@ -9,7 +13,7 @@ Take it for a spin...
 
 ## Install
 
-1. Visit `chrome://extensions`
+1. Visit [`chrome://extensions`](chrome://extensions)
 2. Turn on **Developer mode**
 3. **Load unpacked** → select this folder
 
