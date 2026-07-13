@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="card">
+      <h1>Six Shooter</h1>
+
+      <svg id="cylinder" viewBox="0 0 100 100" role="img" aria-labelledby="count"></svg>
+
+      <p id="count" class="count"></p>
+      <p id="status" class="status"></p>
+
+      <label class="toggle">
+        <input type="checkbox" id="enabled" />
+        <span class="track"><span class="thumb"></span></span>
+        <span class="toggle-label">Armed</span>
+      </label>
+
+      <button id="options" class="link" type="button">Settings</button>
+    </main>
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

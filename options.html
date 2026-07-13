@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Six Shooter — Settings</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Six Shooter</h1>
+        <p class="tagline">Six tabs is all you get.</p>
+      </header>
+
+      <section>
+        <h2>The cylinder</h2>
+
+        <label class="row">
+          <input type="checkbox" data-setting="enabled" />
+          <span>
+            <strong>Armed</strong>
+            <em>Uncheck to put the safety on and stop killing tabs.</em>
+          </span>
+        </label>
+
+        <label class="row">
+          <input type="number" data-setting="chambers" min="1" max="50" step="1" />
+          <span>
+            <strong>Chambers</strong>
+            <em>How many tabs before the next one costs you. Six, if you have any respect for the name.</em>
+          </span>
+        </label>
+      </section>
+
+      <section>
+        <h2>Scope</h2>
+        <p class="hint">What counts as one revolver.</p>
+
+        <label class="row">
+          <input type="radio" name="scope" data-setting="scope" value="window" />
+          <span>
+            <strong>Per window</strong>
+            <em>Every window is its own revolver with its own chambers. Opening a new window is a way out.</em>
+          </span>
+        </label>
+
+        <label class="row">
+          <input type="radio" name="scope" data-setting="scope" value="global" />
+          <span>
+            <strong>All windows</strong>
+            <em>Six tabs across the entire browser. No escape hatch.</em>
+          </span>
+        </label>
+      </section>
+
+      <section>
+        <h2>Immunity</h2>
+        <p class="hint">
+          Pinned tabs sit outside the cylinder: they can't be shot, and they don't take up a chamber.
+          The other two still take up a chamber — they just can't be the one that dies.
+        </p>
+
+        <label class="row">
+          <input type="checkbox" data-setting="immunePinned" />
+          <span>
+            <strong>Pinned tabs are safe</strong>
+            <em>And free. They never count toward your six.</em>
+          </span>
+        </label>
+
+        <label class="row">
+          <input type="checkbox" data-setting="immuneAudible" />
+          <span>
+            <strong>Tabs playing audio are safe</strong>
+            <em>Your music survives the draw.</em>
+          </span>
+        </label>
+
+        <label class="row">
+          <input type="checkbox" data-setting="immuneActive" />
+          <span>
+            <strong>The tab you're looking at is safe</strong>
+            <em>Only matters for tabs opened in the background — a tab you open in the foreground is spared anyway.</em>
+          </span>
+        </label>
+
+        <p class="warn">
+          If every tab in a full cylinder turns out to be immune, nothing is killed and you go over
+          the limit. Immunity wins over the six.
+        </p>
+      </section>
+
+      <section>
+        <h2>Notifications</h2>
+
+        <label class="row">
+          <input type="checkbox" data-setting="notify" />
+          <span>
+            <strong>Announce the dead</strong>
+            <em>Show a notification naming the tab that took the bullet.</em>
+          </span>
+        </label>
+      </section>
+
+      <footer>
+        <span id="saved" class="saved" aria-live="polite"></span>
+        <button id="reset" type="button">Reset to defaults</button>
+      </footer>
+    </main>
+    <script type="module" src="options.js"></script>
+  </body>
+</html>
