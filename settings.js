@@ -51,3 +51,33 @@ export function candidateTabs(tabs, settings, isSpared) {
       !(settings.immuneActive && tab.active),
   );
 }
+
+/**
+ * Which loaded-chamber count each tab's toolbar icon should show. We always
+ * assign per tab, even in global scope: chrome.action keeps a per-tab icon once
+ * set, so a lingering per-tab icon from window scope would otherwise shadow a
+ * later global repaint. Under window scope each tab shows its own window's
+ * count; under global scope every tab shows the browser-wide count.
+ */
+export function iconAssignments(tabs, settings) {
+  const { chambers } = settings;
+
+  if (settings.scope === 'global') {
+    const loaded = countedTabs(tabs, settings).length;
+    return tabs.map((tab) => ({ tabId: tab.id, loaded, chambers }));
+  }
+
+  const byWindow = new Map();
+  for (const tab of tabs) {
+    const group = byWindow.get(tab.windowId) ?? [];
+    group.push(tab);
+    byWindow.set(tab.windowId, group);
+  }
+
+  const assignments = [];
+  for (const group of byWindow.values()) {
+    const loaded = countedTabs(group, settings).length;
+    for (const tab of group) assignments.push({ tabId: tab.id, loaded, chambers });
+  }
+  return assignments;
+}

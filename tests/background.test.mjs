@@ -3,9 +3,29 @@
  * we fire onCreated and assert on which tabs actually get removed.
  */
 import assert from 'node:assert/strict';
+import { iconAssignments } from '../settings.js';
 
 const ROOT = new URL('..', import.meta.url).pathname.replace(/\/$/, '');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// Node has no canvas. Stub just enough that icon.js runs its draw calls and
+// hands back a truthy imageData, so refreshIcons reaches chrome.action.setIcon.
+globalThis.OffscreenCanvas = class {
+  constructor(w, h) {
+    this.width = w;
+    this.height = h;
+  }
+
+  getContext() {
+    return new Proxy(
+      {},
+      {
+        get: () => () => ({ data: [] }),
+        set: () => true,
+      },
+    );
+  }
+};
 
 const DEFAULTS = {
   enabled: true,
@@ -21,6 +41,7 @@ let listeners;
 let tabs;
 let removed;
 let notified;
+let iconCalls;
 
 function makeChrome(settings = {}, session = {}) {
   const sync = { ...DEFAULTS, ...settings };
@@ -36,10 +57,13 @@ function makeChrome(settings = {}, session = {}) {
         get: async (k) => (k in session ? { [k]: session[k] } : {}),
         set: async (p) => Object.assign(session, p),
       },
+      onChanged: { addListener: (f) => listeners.storageChanged.push(f) },
     },
     tabs: {
       onCreated: { addListener: (f) => listeners.created.push(f) },
       onAttached: { addListener: (f) => listeners.attached.push(f) },
+      onDetached: { addListener: (f) => listeners.detached.push(f) },
+      onUpdated: { addListener: (f) => listeners.updated.push(f) },
       onRemoved: { addListener: (f) => listeners.removed.push(f) },
       query: async (q) => tabs.filter((t) => (q.windowId === undefined ? true : t.windowId === q.windowId)),
       get: async (id) => {
@@ -56,6 +80,7 @@ function makeChrome(settings = {}, session = {}) {
       },
     },
     notifications: { create: async (o) => notified.push(o) },
+    action: { setIcon: async (o) => iconCalls.push(o) },
   };
 }
 
@@ -71,9 +96,19 @@ const tab = (id, extra = {}) => ({
 
 /** Fresh module instance each test so the enqueue chain / listeners don't leak. */
 async function setup(settings, session, startTabs) {
-  listeners = { startup: [], installed: [], created: [], attached: [], removed: [] };
+  listeners = {
+    startup: [],
+    installed: [],
+    created: [],
+    attached: [],
+    detached: [],
+    updated: [],
+    removed: [],
+    storageChanged: [],
+  };
   removed = [];
   notified = [];
+  iconCalls = [];
   tabs = startTabs;
   globalThis.chrome = makeChrome(settings, session);
   await import(`file://${ROOT}/background.js?bust=${Math.random()}`);
@@ -246,6 +281,47 @@ await test('notify=false stays quiet', async () => {
   await fireCreated(tab(7));
   assert.equal(removed.length, 1);
   assert.equal(notified.length, 0);
+});
+
+// --- icon indicator --------------------------------------------------------
+
+const DEF = (over = {}) => ({ ...DEFAULTS, ...over });
+const byId = (assignments) => Object.fromEntries(assignments.map((a) => [a.tabId, a.loaded]));
+
+await test('icon: per-window scope shows each window its own count', () => {
+  const t = [
+    ...[1, 2, 3].map((n) => tab(n, { windowId: 1 })),
+    ...[4, 5].map((n) => tab(n, { windowId: 2 })),
+  ];
+  const loaded = byId(iconAssignments(t, DEF({ scope: 'window' })));
+  assert.deepEqual(loaded, { 1: 3, 2: 3, 3: 3, 4: 2, 5: 2 });
+});
+
+await test('icon: global scope shows every tab the browser-wide count', () => {
+  const t = [tab(1, { windowId: 1 }), tab(2, { windowId: 2 }), tab(3, { windowId: 2 })];
+  const loaded = byId(iconAssignments(t, DEF({ scope: 'global' })));
+  assert.deepEqual(loaded, { 1: 3, 2: 3, 3: 3 });
+});
+
+await test('icon: every tab gets a per-tab assignment, even in global scope', () => {
+  // Guards the shadowing bug: a global repaint must reach each tab by id, or a
+  // leftover per-tab icon from window scope would stick.
+  const t = [tab(1), tab(2)];
+  const ids = iconAssignments(t, DEF({ scope: 'global' })).map((a) => a.tabId);
+  assert.deepEqual(ids.sort(), [1, 2]);
+});
+
+await test('icon: pinned tabs are excluded from the loaded count', () => {
+  const t = [tab(1, { pinned: true }), tab(2), tab(3)];
+  const loaded = byId(iconAssignments(t, DEF({ immunePinned: true })));
+  assert.deepEqual(loaded, { 1: 2, 2: 2, 3: 2 }, 'count is 2, but the pinned tab still gets an icon');
+});
+
+await test('icon: firing a tab event repaints the icons', async () => {
+  await setup({}, {}, [1, 2, 3].map((n) => tab(n)));
+  const before = iconCalls.length;
+  await fireCreated(tab(4));
+  assert.ok(iconCalls.length > before, 'opening a tab should trigger setIcon calls');
 });
 
 // ---------------------------------------------------------------------------

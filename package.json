@@ -2,6 +2,7 @@
   "name": "six-shooter",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "Chrome extension: six tabs is all you get.",
   "license": "GPL-3.0-or-later",
   "author": "Brian Muenzenmeyer",

@@ -45,6 +45,13 @@ Immunity beats the six.
 Session restore is exempt. Chrome replays a tab-created event for every tab it reopens at launch,
 so there's a five-second grace period — otherwise "continue where you left off" would be a bloodbath.
 
+## The toolbar icon fills up live
+
+The extension icon *is* the cylinder, and its chambers light up brass as tabs fill them and go dark
+as tabs close — so a glance tells you how close you are to the next draw. Under *per window* scope
+each window's icon reflects that window's own count. If the safety's off and you somehow exceed the
+limit, the hub turns red.
+
 ## Settings
 
 Click the toolbar icon for the cylinder and a safety switch; **Settings** opens the full page.
@@ -57,9 +64,10 @@ npm test          # drives background.js against a fake chrome API
 npm run icons     # regenerates icons/ from tools/make_icons.py (no dependencies)
 ```
 
-The tab-selection rules live in `settings.js` so the popup's chamber count and the background
-worker's kill logic can't drift apart. `tests/background.test.mjs` fires real `onCreated` events at
-the real listeners and asserts on which tabs actually get removed.
+The tab-selection rules live in `settings.js` so the popup's chamber count, the background worker's
+kill logic, and the toolbar icon's fill state can't drift apart. `icon.js` rasterizes the cylinder
+for `chrome.action.setIcon`. `tests/background.test.mjs` fires real `onCreated` events at the real
+listeners and asserts on which tabs actually get removed and repainted.
 
 ## License
 
